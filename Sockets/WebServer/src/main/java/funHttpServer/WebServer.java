@@ -201,26 +201,46 @@ class WebServer {
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
 
+          boolean numError = false;
+
           // set default values for num1 and num2
           Integer num1 = 4;
           Integer num2 = 5;
           if (query_pairs.containsKey("num1")) {
             // extract required fields from parameters
-            num1 = Integer.parseInt(query_pairs.get("num1"));
+            try {
+              num1 = Integer.parseInt(query_pairs.get("num1"));
+            } catch (NumberFormatException e) {
+              numError = true;
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("num1 is not a number");
+            }
           }
           if (query_pairs.containsKey("num2")) {
             // extract required fields from parameters
-            num2 = Integer.parseInt(query_pairs.get("num2"));
+            try {
+              num2 = Integer.parseInt(query_pairs.get("num2"));
+            } catch (NumberFormatException e) {
+              numError = true;
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("num2 is not a number");
+            }
           }
 
           // do math
           Integer result = num1 * num2;
 
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
+          if (!numError) {
+            // Generate success response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Result is: " + result);
+          }
 
           // TODO: Include error handling here with a correct error code and
           // a response that makes sense
