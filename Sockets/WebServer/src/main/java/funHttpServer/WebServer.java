@@ -250,7 +250,7 @@ class WebServer {
           // TODO: Include error handling here with a correct error code and
           // a response that makes sense
 
-        } else if (request.contains("github?")) {
+        } else if (request.contains("github")) {
           // pulls the query from the request and runs it with GitHub's REST API
           // check out https://docs.github.com/rest/reference/
           //
@@ -259,29 +259,58 @@ class WebServer {
           // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
           //     "/repos/OWNERNAME/REPONAME/contributors"
 
+          boolean error = false;
+
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
-          JSONArray repoList = new JSONArray(json);
+          if (request.contains("?")) {
+            try {
+              query_pairs = splitQuery(request.replace("github?", ""));
+            } catch (Exception e) {
+                error = true;
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Error: " + "The query entered was invalid, please try again.");
+                return builder.toString().getBytes();
+            }
+          }
+          if (!query_pairs.containsKey("query")) {
+            error = true;
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Error: " + "The query entered was invalid, please try again.");
+            return builder.toString().getBytes();
+          }
+            String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
+            JSONArray repoList = new JSONArray();
 
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-
-          for (int i = 0; i < repoList.length(); i++) {
-            JSONObject repo = repoList.getJSONObject(i);
-            String name = repo.getString("full_name");
-            int ID = repo.getInt("id");
-            String owner_login = repo.getJSONObject("owner").getString("login");
-
-            builder.append("Repo Full Name: " + name + "<br>");
-            builder.append("Repo ID: " + ID + "<br>");
-            builder.append("Owner Login: " + owner_login + "<br><br>");
+          try {
+            repoList = new JSONArray(json);
+          } catch (Exception e) {
+            error = true;
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Error: " + "The query entered was invalid, please try again.");
           }
 
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response based on what the assignment document asks for
+          if (!error) {
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            
+              for (int i = 0; i < repoList.length(); i++) {
+                JSONObject repo = repoList.getJSONObject(i);
+                String name = repo.getString("full_name");
+                int ID = repo.getInt("id");
+                String owner_login = repo.getJSONObject("owner").getString("login");
+
+                builder.append("Repo Full Name: " + name + "<br>");
+                builder.append("Repo ID: " + ID + "<br>");
+                builder.append("Owner Login: " + owner_login + "<br><br>");
+              }
+          }
 
         } else {
           // if the request is not recognized at all
