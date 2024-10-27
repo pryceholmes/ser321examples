@@ -25,6 +25,8 @@ import java.util.Random;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 class WebServer {
   public static void main(String args[]) {
@@ -261,11 +263,23 @@ class WebServer {
           query_pairs = splitQuery(request.replace("github?", ""));
           String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
           System.out.println(json);
+          JSONArray repoList = new JSONArray(json);
 
           builder.append("HTTP/1.1 200 OK\n");
           builder.append("Content-Type: text/html; charset=utf-8\n");
           builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
+
+          for (int i = 0; i < repoList.length(); i++) {
+            JSONObject repo = repoList.getJSONObject(i);
+            String name = repo.getString("full_name");
+            int ID = repo.getInt("id");
+            String owner_login = repo.getJSONObject("owner").getString("login");
+
+            builder.append("Repo Full Name: " + name + "<br>");
+            builder.append("Repo ID: " + ID + "<br>");
+            builder.append("Owner Login: " + owner_login + "<br><br>");
+          }
+
           // TODO: Parse the JSON returned by your fetch and create an appropriate
           // response based on what the assignment document asks for
 
