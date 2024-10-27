@@ -201,18 +201,15 @@ class WebServer {
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
 
-          Integer num1;
-            Integer num2;
-
-          if (!query_pairs.containsKey("num1")) {
-            // if the num1 parameter is missing, set it to default value 4
-            num1 = 4;
-          } else if (!query_pairs.containsKey("num2")) {
-            // if the num2 parameter is missing, set it to default value 5
-            num2 = 5;
-          } else {
+          // set default values for num1 and num2
+          Integer num1 = 4;
+          Integer num2 = 5;
+          if (query_pairs.containsKey("num1")) {
             // extract required fields from parameters
             num1 = Integer.parseInt(query_pairs.get("num1"));
+          }
+          if (query_pairs.containsKey("num2")) {
+            // extract required fields from parameters
             num2 = Integer.parseInt(query_pairs.get("num2"));
           }
 
