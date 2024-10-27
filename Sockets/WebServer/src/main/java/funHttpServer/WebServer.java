@@ -202,7 +202,15 @@ class WebServer {
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
           if (request.contains("?")) {
-            query_pairs = splitQuery(request.replace("multiply?", ""));
+            try {
+              query_pairs = splitQuery(request.replace("multiply?", ""));
+            } catch (Exception e) {
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Error: " + "The query entered was invalid, please try again.");
+              return builder.toString().getBytes();
+            }
           }
 
           boolean numError = false;
@@ -266,12 +274,12 @@ class WebServer {
             try {
               query_pairs = splitQuery(request.replace("github?", ""));
             } catch (Exception e) {
-                error = true;
-                builder.append("HTTP/1.1 400 Bad Request\n");
-                builder.append("Content-Type: text/html; charset=utf-8\n");
-                builder.append("\n");
-                builder.append("Error: " + "The query entered was invalid, please try again.");
-                return builder.toString().getBytes();
+              error = true;
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Error: " + "The query entered was invalid, please try again.");
+              return builder.toString().getBytes();
             }
           }
           if (!query_pairs.containsKey("query")) {
@@ -282,8 +290,8 @@ class WebServer {
             builder.append("Error: " + "The query entered was invalid, please try again.");
             return builder.toString().getBytes();
           }
-            String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-            JSONArray repoList = new JSONArray();
+          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
+          JSONArray repoList = new JSONArray();
 
           try {
             repoList = new JSONArray(json);
@@ -299,20 +307,105 @@ class WebServer {
             builder.append("HTTP/1.1 200 OK\n");
             builder.append("Content-Type: text/html; charset=utf-8\n");
             builder.append("\n");
-            
-              for (int i = 0; i < repoList.length(); i++) {
-                JSONObject repo = repoList.getJSONObject(i);
-                String name = repo.getString("full_name");
-                int ID = repo.getInt("id");
-                String owner_login = repo.getJSONObject("owner").getString("login");
 
-                builder.append("Repo Full Name: " + name + "<br>");
-                builder.append("Repo ID: " + ID + "<br>");
-                builder.append("Owner Login: " + owner_login + "<br><br>");
-              }
+            for (int i = 0; i < repoList.length(); i++) {
+              JSONObject repo = repoList.getJSONObject(i);
+              String name = repo.getString("full_name");
+              int ID = repo.getInt("id");
+              String owner_login = repo.getJSONObject("owner").getString("login");
+
+              builder.append("Repo Full Name: " + name + "<br>");
+              builder.append("Repo ID: " + ID + "<br>");
+              builder.append("Owner Login: " + owner_login + "<br><br>");
+            }
           }
 
-        } else {
+        } else if (request.contains("concat")) {
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+          if (request.contains("?")) {
+            try {
+              query_pairs = splitQuery(request.replace("concat?", ""));
+            } catch (Exception e) {
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Error: " + "The query entered was invalid, please try again.");
+              return builder.toString().getBytes();
+            }
+          }
+
+          // set default values for strings
+          String concat1 = "Hello, ";
+          String concat2 = "world!";
+
+          if (query_pairs.containsKey("string1")) {
+            concat1 = query_pairs.get("string1");
+          }
+          if (query_pairs.containsKey("string2")) {
+            concat2 = query_pairs.get("string2");
+          }
+          String concatResult = concat1 + concat2;
+
+          builder.append("HTTP/1.1 200 OK\n");
+          builder.append("Content-Type: text/html; charset=utf-8\n");
+          builder.append("\n");
+          builder.append("Concatenation result is: " + concatResult);
+
+
+        } else if (request.contains("indexOf")) {
+          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            if (request.contains("?")) {
+                try {
+                query_pairs = splitQuery(request.replace("indexOf?", ""));
+                } catch (Exception e) {
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Error: " + "The query entered was invalid, please try again.");
+                return builder.toString().getBytes();
+                }
+            }
+
+            if (!query_pairs.containsKey("string") || !query_pairs.containsKey("char")) {
+                builder.append("HTTP/1.1 400 Bad Request\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Error: " + "The query entered was invalid, please ensure string " +
+                        "and char are both present.");
+                return builder.toString().getBytes();
+            }
+            String string = query_pairs.get("string");
+            String charString = query_pairs.get("char");
+
+
+          if (string.isEmpty() || charString.isEmpty()) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Error: " + "The query entered was invalid, please ensure string " +
+                    "and char both are not empty.");
+            return builder.toString().getBytes();
+          }
+
+          if (charString.length() != 1) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Error: " + "The query entered was invalid, please ensure char is a single character.");
+            return builder.toString().getBytes();
+          }
+
+            string = string.toLowerCase();
+            charString = charString.toLowerCase();
+            int index = string.indexOf(charString);
+
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("First index of character in string is: " + index);
+
+
+      }else {
           // if the request is not recognized at all
 
           builder.append("HTTP/1.1 400 Bad Request\n");

@@ -8,8 +8,18 @@
 			<li>/file/sample.html -- returns the content of the file sample.html</li>
 			<li>/json -- returns a json of the /random request</a></li>
 			<li>/random -- returns index.html</a></li>
+			<li>/concat -- takes inputs string1 and string2 and returns the concatenated result</li>
+			<li>/indexOf -- takes inputs string and char and returns first index of char in string</li>
 		</ul>
 		<h3>File Structure in www (you can use /file/www/FILENAME):</h3>
 		${links}
+			<h3>Concatenate two strings example:</h3>
+			<ul>
+				<li>/concat?string1=Hello,+&string2=world!</li>
+			</ul>
+			<h3>Index of character in string example:</h3>
+			<ul>
+				<li>/indexOf?string=Hello,+&char=e</li>
+			</ul>
 	</body>
 </html>
